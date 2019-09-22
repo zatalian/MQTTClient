@@ -12,12 +12,12 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 public class Player implements Listener
 {
     MqttClient mqttClient;
-    String topic;
+    //String topic;
 
     public Player()
     {
         mqttClient = Main.getInstance().getMqttClient();
-        topic = Main.getInstance().getTopic() + "player/";
+        //topic = Main.getInstance().getEventTopic() + "player/";
     }
 
     @EventHandler public void onJoin(PlayerJoinEvent event){ processEvent(event); }
@@ -34,13 +34,16 @@ public class Player implements Listener
 
         JSONObject payload = new JSONObject();
         payload.appendField("name", player.getName());
+        //payload.appendField("level", player.getLevel().getName());
+        payload.appendField("id", player.getId());
 
         try
         {
+            String topic = Main.getInstance().getEventTopic() + player.getLevel().getName() + "/player/" + player.getId() + "/" + eventName + "/";
             MqttMessage message = new MqttMessage();
             message.setPayload(payload.toJSONString().getBytes());
             if (!mqttClient.isConnected()) mqttClient.reconnect();
-            mqttClient.publish(topic + player.getId() + "/" + eventName + "/", message);
+            mqttClient.publish(topic, message);
             Main.getInstance().getLogger().debug("PlayerEvent handled");
         }
         catch (Exception ex)

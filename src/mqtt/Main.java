@@ -3,6 +3,7 @@ package mqtt;
 import cn.nukkit.plugin.PluginBase;
 import cn.nukkit.utils.Config;
 import cn.nukkit.utils.ConfigSection;
+import mqtt.events.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClientPersistence;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -13,7 +14,8 @@ public class Main extends PluginBase
     private static Main main;
     MqttClient mqttClient;
     Config config;
-    String topic;
+    String eventTopic;
+    String commandTopic;
 
     @Override
     public void onEnable()
@@ -21,23 +23,30 @@ public class Main extends PluginBase
 
         ConfigSection configSection = new ConfigSection();
         configSection.set("broker", "tcp://127.0.0.1:1883");
-        configSection.set("topic", "nukkit/servername/");
+        configSection.set("events", "nukkit/servername/event/");
+        configSection.set("commands", "nukkit/servername/command/#");
 
         config = getConfig();
         config.setDefault(configSection);
         config.save();
 
-        topic = config.getString("topic");
+        eventTopic = config.getString("events");
+        commandTopic = config.getString("commands");
 
         try
         {
             MqttClientPersistence persistence = new MemoryPersistence();
             mqttClient = new MqttClient(config.getString("broker"), MqttClient.generateClientId(), persistence);
+            mqttClient.setCallback(new MqttCallback());
 
             mqttClient.connect();
+            this.getLogger().info("Connected to broker: " + config.getString("broker"));
             MqttMessage message = new MqttMessage();
             message.setPayload("Nukkit Server Reload".getBytes());
-            mqttClient.publish(topic, message);
+            mqttClient.publish(eventTopic, message);
+            this.getLogger().info("publish topic: " + eventTopic);
+            mqttClient.subscribe(commandTopic, 1);
+            this.getLogger().info("subscribed to topic: " + commandTopic);
         }
         catch (Exception ex)
         {
@@ -73,8 +82,10 @@ public class Main extends PluginBase
         return mqttClient;
     }
 
-    public String getTopic()
+    public String getEventTopic()
     {
-        return topic;
+        return eventTopic;
     }
+
+    public String getCommandTopic() {return commandTopic; }
 }

@@ -12,12 +12,10 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 public class Block implements Listener
 {
     MqttClient mqttClient;
-    String topic;
 
     public Block()
     {
         mqttClient = Main.getInstance().getMqttClient();
-        topic = Main.getInstance().getTopic() + "block/";
     }
 
     @EventHandler
@@ -93,9 +91,6 @@ public class Block implements Listener
     }
 
 
-
-
-
     public void processEvent(BlockEvent event)
     {
         String eventName = event.getEventName();
@@ -105,18 +100,22 @@ public class Block implements Listener
 
         cn.nukkit.block.Block block = event.getBlock();
 
-
         JSONObject payload = new JSONObject();
 
         payload.appendField("position", new double[] {block.getX(), block.getY(), block.getZ()});
+        //payload.appendField("level", block.getLevel().getName());
+        payload.appendField("id", block.getId());
+        payload.appendField("fullId", block.getFullId());
+
         if (event instanceof BlockRedstoneEvent) payload.appendField("power", ((BlockRedstoneEvent) event).getNewPower());
 
         try
         {
+            String topic = Main.getInstance().getEventTopic() + block.getLevel().getName() + "/block/" + block.getId() + "/" + eventName + "/";
             MqttMessage message = new MqttMessage();
             message.setPayload(payload.toJSONString().getBytes());
             if (!mqttClient.isConnected()) mqttClient.reconnect();
-            mqttClient.publish(topic + block.getId() + "/" + eventName + "/", message);
+            mqttClient.publish(topic, message);
             Main.getInstance().getLogger().debug("BlockEvent handled");
         }
         catch (Exception ex)
