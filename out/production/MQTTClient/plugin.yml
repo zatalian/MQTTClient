@@ -1,0 +1,4 @@
+name: MQTTClient
+main: mqtt.Main
+version: "0.2"
+api: ["1.0.0"]

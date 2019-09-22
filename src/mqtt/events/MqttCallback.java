@@ -31,7 +31,7 @@ public class MqttCallback implements org.eclipse.paho.client.mqttv3.MqttCallback
             int topicLength = Main.getInstance().getCommandTopic().length();
             Level level = Main.getInstance().getServer().getLevelByName(s.substring(topicLength - 1, s.indexOf("/", topicLength)));
             String subTopic = s.substring(s.indexOf("/", topicLength) + 1);
-            Main.getInstance().getLogger().info("subtopic: " + subTopic);
+            //Main.getInstance().getLogger().info("subtopic: " + subTopic);
 
             if (subTopic.equalsIgnoreCase("block/"))
             {
